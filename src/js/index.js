@@ -1,4 +1,3 @@
-import axios from 'axios';
 import Notiflix from 'notiflix';
 import PicturesService from './PicturesService.js';
 import LoadMoreBtn from './components/LoadMoreBtn.js';
@@ -13,9 +12,9 @@ const loadMoreBtn = new LoadMoreBtn({
 
 refs.formEl.addEventListener('submit', onsubmit);
 loadMoreBtn.button.addEventListener('click', fetchPictures);
-window.addEventListener('scroll', handleScroll);
+// window.addEventListener('scroll', handleScroll);
 
-function onsubmit(event) {
+async function onsubmit(event) {
   event.preventDefault();
   loadMoreBtn.hide();
   const {
@@ -28,30 +27,32 @@ function onsubmit(event) {
     picturesService.searchQuery = value;
     picturesService.resetPage();
     clearGallery();
-    fetchPictures().finally(() => refs.formEl.reset());
+    const totalHits = await fetchPictures().finally(() => {
+      refs.formEl.reset();
+    });
+    if (totalHits !== undefined) showTotalHits(totalHits);
   }
 }
 
 async function fetchPictures() {
   loadMoreBtn.disable();
-  const markup = await getPicturesMarkup();
+  const totalHits = await getPicturesMarkup();
   loadMoreBtn.enable();
+  return totalHits;
 }
 
 async function getPicturesMarkup() {
   try {
     const { hits, totalHits } = await picturesService.getPictures();
-
     if (hits.length === 0 && totalHits !== 0) throw new Error('Finish');
     if (hits.length === 0 && totalHits === 0) throw new Error('No such images');
-
-    return createMarkup(hits);
+    return createMarkup(hits, totalHits);
   } catch (error) {
     onError(error);
   }
 }
 
-function createMarkup(data) {
+function createMarkup(data, totalHits) {
   const markup = data
     .map(
       ({
@@ -84,7 +85,8 @@ function createMarkup(data) {
     )
     .join('');
   updatePicturesList(markup);
-  loadMoreBtn.show();
+  showLoadMoreBtn(totalHits);
+  return totalHits;
 }
 
 function updatePicturesList(markup) {
@@ -108,6 +110,17 @@ function onError(error) {
     );
 }
 
+function showTotalHits(totalHits) {
+  if (totalHits === 1)
+    Notiflix.Notify.info(`Hooray! We found ${totalHits} image.`);
+  else Notiflix.Notify.info(`Hooray! We found ${totalHits} images.`);
+}
+
+function showLoadMoreBtn(totalHits) {
+  const per_page = picturesService.per_page;
+  if (totalHits < per_page) loadMoreBtn.hide();
+  else loadMoreBtn.show();
+}
 // function handleScroll() {
 //   const { scrollTop, scrollHeight, clientHeight } = document.documentElement;
 
@@ -115,3 +128,9 @@ function onError(error) {
 //     fetchPictures();
 //   }
 // }
+
+// для  тестування в input
+// fdf - 1 photo
+// fd - 3 photo;
+// fr - 26 photo;
+// cat - 500 photo

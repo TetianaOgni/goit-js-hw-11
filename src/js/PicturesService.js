@@ -1,4 +1,5 @@
 import axios from 'axios';
+
 const BASE_URL = 'https://pixabay.com/api/';
 const KEY = '36526850-4de1e998f6db27b12a1d4f142';
 
@@ -6,7 +7,7 @@ export default class PicturesService {
   constructor() {
     this.page = 1;
     this.searchQuery = '';
-    this.per_page = 10;
+    this.per_page = 40;
   }
   async getPictures() {
     const { data } = await axios.get(
