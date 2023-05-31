@@ -13,8 +13,7 @@ export default class PicturesService {
     const { data } = await axios.get(
       `${BASE_URL}/?key=${KEY}&q=${this.searchQuery}&image_type=photo&orientation=horizontal&safesearch=true&page=${this.page}&per_page=${this.per_page}`
     );
-    this.incrementPage();
-    console.log(data);
+
     return data;
   }
   resetPage() {
